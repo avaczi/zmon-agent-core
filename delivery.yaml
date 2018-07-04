@@ -28,7 +28,7 @@ pipeline:
 
             if ! docker pull "$IMAGE"; then
                 echo "zmon-agent-core:$VERSION does not exist, building and pushing to pierone ..."
-                docker build -f zmon-agent-core.docker --build-arg BASE_IMAGE=zmon-agent-core --build-arg BASE_IMAGE_VERSION="${DEP_AGENT_VERSION}" -t "$IMAGE" .
+                docker build --build-arg BASE_IMAGE=zmon-agent-core --build-arg BASE_IMAGE_VERSION="${DEP_AGENT_VERSION}" -t "$IMAGE" .
                 docker push "$IMAGE"
             else
                 echo "Image already exists. Skipping building and pushing: zmon-agent-core:$VERSION"
@@ -45,7 +45,7 @@ pipeline:
 
           if ! docker pull "$IMAGE"; then
               echo "zmon-agent-core-unstable:$VERSION does not exist, building and pushing to pierone ..."
-              docker build -f zmon-agent-core.docker --build-arg BASE_IMAGE=zmon-agent-core-unstable --build-arg  BASE_IMAGE_VERSION=${DEP_AGENT_UNSTABLE_VERSION} -t "$IMAGE" .
+              docker build --build-arg BASE_IMAGE=zmon-agent-core-unstable --build-arg  BASE_IMAGE_VERSION=${DEP_AGENT_UNSTABLE_VERSION} -t "$IMAGE" .
               docker push "$IMAGE"
           else
               echo "Image already exists. Skipping building and pushing: zmon-agent-core-unstable:$VERSION"
