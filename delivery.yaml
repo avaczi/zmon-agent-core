@@ -19,7 +19,7 @@ pipeline:
 
   - desc: "Push Docker Image"
     cmd: |
-      IMAGE=pierone.stups.zalan.do/zmon/zmon-agent-core:${CDP_BUILD_VERSION}
+      IMAGE=pierone.stups.zalan.do/metrics/zmon-agent-core:${CDP_BUILD_VERSION}
 
       if ! docker pull "$IMAGE"; then
           echo "$IMAGE does not exist, building and pushing to pierone ..."
