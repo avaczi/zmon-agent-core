@@ -1,52 +1,37 @@
 version: "2017-09-20"
-dependencies:
-  - id: agent
-    type: docker
-    ref: registry.opensource.zalan.do/zmon/zmon-agent-core
-
-  - id: agent_unstable
-    type: docker
-    ref: registry.opensource.zalan.do/zmon/zmon-agent-core-unstable
-
 pipeline:
-  - id: build
-    type: script
-    commands:
-      - desc: "Install dependencies"
-        cmd: |
-          apt-get install -q -y --no-install-recommends git
-          curl -fLOsS https://delivery.cloud.zalando.com/utils/ensure-docker && sh ensure-docker && rm ensure-docker
+- id: build
+  overlay: guild-python/latest
+  type: script
+  env:
+    PYENV_VERSION: "3.7"
+  commands:
+  - desc: Test package
+    cmd: |
+      pip3 install -U flake8
+      flake8 .
+      tox
 
-      - desc: "Build and push zmon-agent-core"
-        cmd: |
-          IS_PR_BUILD=${CDP_PULL_REQUEST_NUMBER+"true"}
-          if [ "${IS_PR_BUILD}" != "true" ]
-          then
-            INTERNAL_VERSION=$(git describe --tags --always --dirty)
-            VERSION=${DEP_AGENT_VERSION}-${INTERNAL_VERSION}
-            IMAGE=pierone.stups.zalan.do/zmon/zmon-agent-core:${VERSION}
+  - desc: SonarQube analysis
+    cmd: |
+      poetry run pylint -j 0 zmon_agent > pylint-report.txt || true # never fail here
+      sonar-client
 
-            if ! docker pull "$IMAGE"; then
-                echo "zmon-agent-core:$VERSION does not exist, building and pushing to pierone ..."
-                docker build --build-arg BASE_IMAGE=zmon-agent-core --build-arg BASE_IMAGE_VERSION="${DEP_AGENT_VERSION}" -t "$IMAGE" .
-                docker push "$IMAGE"
-            else
-                echo "Image already exists. Skipping building and pushing: zmon-agent-core:$VERSION"
-            fi
-          else
-            echo "PR build, skipping building step!"
-          fi
+  - desc: "Push Docker Image"
+    cmd: |
+      IMAGE=pierone.stups.zalan.do/zmon/zmon-agent-core:${CDP_BUILD_VERSION}
 
-      - desc: "Build and push zmon-agent-core-unstable"
-        cmd: |
-          INTERNAL_VERSION=$(git describe --tags --always --dirty)
-          VERSION=${DEP_AGENT_UNSTABLE_VERSION}-${INTERNAL_VERSION}
-          IMAGE=pierone.stups.zalan.do/zmon/zmon-agent-core-unstable:${VERSION}
+      if ! docker pull "$IMAGE"; then
+          echo "$IMAGE does not exist, building and pushing to pierone ..."
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+      else
+          echo "Image already exists. Skipping building and pushing: $IMAGE"
+      fi
 
-          if ! docker pull "$IMAGE"; then
-              echo "zmon-agent-core-unstable:$VERSION does not exist, building and pushing to pierone ..."
-              docker build --build-arg BASE_IMAGE=zmon-agent-core-unstable --build-arg  BASE_IMAGE_VERSION=${DEP_AGENT_UNSTABLE_VERSION} -t "$IMAGE" .
-              docker push "$IMAGE"
-          else
-              echo "Image already exists. Skipping building and pushing: zmon-agent-core-unstable:$VERSION"
-          fi
+notifications:
+- channel: google_chat
+  rooms:
+  - AAAAe-hg3KE
+  config:
+    emoji_pack: emotional
