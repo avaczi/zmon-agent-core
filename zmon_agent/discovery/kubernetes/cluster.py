@@ -55,7 +55,7 @@ STACKSET_TYPE = 'kube_stackset'
 INSTANCE_TYPE_LABEL = 'beta.kubernetes.io/instance-type'
 
 PROTECTED_FIELDS = {'id', 'type', 'kube_cluster', 'alias', 'cluster_environment', 'created_by',
-                    'infrastructure_account', 'region', 'name', 'namespace'}
+                    'infrastructure_account', 'region', 'name', 'namespace', 'team'}
 
 SERVICE_ACCOUNT_PATH = '/var/run/secrets/kubernetes.io/serviceaccount'
 
