@@ -1402,7 +1402,12 @@ def get_cluster_stacks(kube_client, cluster_id, alias, environment, region, infr
     for r in stacks:
         obj = r.obj
 
-        containers = obj['spec']['podTemplate']['spec']['containers']
+        containers = (
+            obj.get("spec", {})
+            .get("podTemplate", {})
+            .get("spec", {})
+            .get("containers", [])
+        )
         status = obj.get('status', {})
 
         actual_traffic_weight = status.get('actualTrafficWeight', 0.0)
@@ -1417,9 +1422,9 @@ def get_cluster_stacks(kube_client, cluster_id, alias, environment, region, infr
             'infrastructure_account': infrastructure_account,
             'region': region,
             'stack_name': r.name,
-            'stack_namespace': obj['metadata']['namespace'],
+            'stack_namespace': obj.get("metadata", {}).get("namespace", ""),
 
-            'containers': {c['name']: c.get('image', '') for c in containers if 'name' in c},
+            'containers': {c.get("name", ""): c.get('image', '') for c in containers if 'name' in c},
 
             'replicas': status.get('replicas', 0),
             'ready_replicas': status.get('readyReplicas', 0),
