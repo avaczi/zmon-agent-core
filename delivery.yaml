@@ -29,6 +29,21 @@ pipeline:
           echo "Image already exists. Skipping building and pushing: $IMAGE"
       fi
 
+- id: staging
+  desc: "Deploy staging environment"
+  type: process
+  target: stups-test
+  process: microservice_standard_deployment
+  config:
+    apply_permanent_resources:
+      env:
+      - name: IMAGE
+        value: "pierone.stups.zalan.do/metrics/zmon-agent-core:#{CDP_BUILD_VERSION}"
+      - name: OAUTH2_ACCESS_TOKEN_URL
+        value: "https://sandbox.identity.zalando.com/oauth2/token?business_partner_id=810d1d00-4312-43e5-bd31-d8373fdd24c7"
+
+
+
 notifications:
 - channel: google_chat
   rooms:
