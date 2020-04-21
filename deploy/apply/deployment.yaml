@@ -54,7 +54,7 @@ spec:
             - name: CREDENTIALS_DIR
               value: /meta/credentials
           volumeMounts:
-            - name: credentials
+            - name: zmon-credentials
               mountPath: /meta/credentials
               readOnly: true
 
