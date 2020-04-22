@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zmon-appliance-agent
+  labels:
+    application: zmon-appliance
+    component: agent
+    environment: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: zmon-appliance
+      component: agent
+      environment: staging
+  template:
+    metadata:
+      labels:
+        application: zmon-appliance
+        component: agent
+        environment: staging
+    spec:
+      containers:
+        - name: agent
+          image: "{{IMAGE}}"
+          resources:
+            limits:
+              cpu: 10m
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 200Mi
+
+          env:
+            - name: ZMON_AGENT_INFRASTRUCTURE_ACCOUNT
+              value: "aws:085668006708-test"
+            - name: ZMON_AGENT_REGION
+              value: eu-central-1
+            - name: ZMON_AGENT_INTERVAL
+              value: "60"
+
+            - name: ZMON_AGENT_ENTITY_SERVICE_URL
+              value: http://zmon-data-service
+
+            - name: ZMON_AGENT_KUBERNETES_CLUSTER_ID
+              value: aws:085668006708-test:eu-central-1:kube-1
+            - name: ZMON_AGENT_KUBERNETES_CLUSTER_ALIAS
+              value: stups-test-zmon
+            - name: ZMON_AGENT_KUBERNETES_CLUSTER_ENVIRONMENT
+              value: zmon-test
+
+            - name: OAUTH2_ACCESS_TOKEN_URL
+              value: "{{{OAUTH2_ACCESS_TOKEN_URL}}}"
+            - name: CREDENTIALS_DIR
+              value: /meta/credentials
+          volumeMounts:
+            - name: zmon-credentials
+              mountPath: /meta/credentials
+              readOnly: true
+
+      volumes:
+        - name: zmon-credentials
+          secret:
+            secretName: zmon-credentials
