@@ -1155,6 +1155,9 @@ def get_postgresql_cluster_members(kube_client, cluster_id, alias, environment, 
         # TODO: filter in the API call
         labels = obj['metadata'].get('labels', {})
         pod_phase = obj['status']['phase']
+        container_statuses = obj['status']['containerStatuses']
+        postgres_container_status = [s for s in container_statuses if s['name'] == 'postgres'][0]
+
         if labels.get('application') != 'spilo' or labels.get('version') is None or pod_phase != 'Running':
             continue
 
@@ -1162,7 +1165,7 @@ def get_postgresql_cluster_members(kube_client, cluster_id, alias, environment, 
         pod_namespace = obj['metadata']['namespace']
         service_dns_name = '{}.{}.svc.cluster.local'.format(labels['version'], pod_namespace)
 
-        container = obj['spec']['containers'][0]  # we don't assume more than one container
+        container = [c for c in obj['spec']['containers'] if c['name'] == 'postgres'][0]
         cluster_name = [env['value'] for env in container.get('env', []) if env['name'] == 'SCOPE'][0]
 
         ebs_volume_id = ''
@@ -1209,7 +1212,8 @@ def get_postgresql_cluster_members(kube_client, cluster_id, alias, environment, 
             'team_id': labels.get('team'),
             'pod_start_time': obj.get('status', {}).get('startTime', ''),
             'patroni_state': json.loads(obj.get("metadata", {}).get("annotations", {}).get("status", {}))
-                             .get("state", {})
+                             .get("state", {}),
+            'pod_last_state': postgres_container_status.get('lastState', '')
         }
 
         entities.append(entity)
